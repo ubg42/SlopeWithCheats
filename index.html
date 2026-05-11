@@ -1,0 +1,265 @@
+<head>
+  <link rel="stylesheet" href="TemplateData/style.css">
+  <title>Slope</title>
+  <script src="TemplateData/UnityProgress.js"></script>
+  <script src="TemplateData/unityloader41.js"></script>
+  <script>
+//helpers
+let fsms = [29016368, 29016064, 29224512, 29224208, 29223904, 29223600, 29222384, 29222080, 30522336, 30522032, 29016672, 29016976];
+let morefsms = [33402432,33402128,33401824,33401520,33401216,33400912,33400608,33400304,33400000,33399696,33399392,33399088,33398784,33545792,33545488,33545184,33692640];
+let prefabs = [33308736, 25272688, 25272528, 25272624, 25272640, 25272544, 25272560, 25272576, 25272880, 25272896, 25272816, 25272832, 25272848, 25272592, 25272608, 25272656, 25272928, 25272912, 37954832, 25272736, 25272720, 25272864, 25272480, 25272768, 25272784, 25272496, 25272704, 25272800, 25272752, 25272464, 25272944, 25272976];
+window.readGameObjects = true;
+function readFsm(fsm){
+    return {name:readString(read32(fsm+0x18)),GameObject:readGameObjects?readGameObject(getFsmGameObject(fsm)):null,events:readFullArr(read32(fsm+0x24)).map(e=>readFsmEvent(e)),startState:readString(read32(fsm+0x1C)),dataVersion:read32(fsm+0xC),states:readFullArr(read32(fsm+0x20)).map(e=>readFsmState(e)),variables:readFsmVariables(read32(fsm+0x2C)),globalTransitions:readFullArr(read32(fsm+0x28)).map(e=>readFsmTransitions(e)),PlayMakerFSM:gameInstance.Module.dynCall_iii(3117,fsm),ptr:fsm}
+}
+function set_UseGravity(rb,val){gameInstance.Module.dynCall_viii(1922,BallRb,val?1:0);}
+function readFsms(){return readList(gameInstance.Module.dynCall_iii(3073)).map(e=>readFsm(e));}
+function readFsmEvents(){return readList(30727264).map(e=>readFsmEvent(e));}
+function readClassName(il2cppobjectptr){return readChar(read32(read32(il2cppobjectptr)+0x8));}
+function readClassNamespace(il2cppobjectptr){return readChar(read32(read32(il2cppobjectptr)+0xc));}
+function readVtableptr(ptr,slot){return read32(read32(ptr)+0xb8+(8*(slot-1))+0x4);}
+function get_component(gameobject,type){return gameInstance.Module.dynCall_iiii(1522,gameobject,type);}
+function getRandState(){return [read32(0x1ea000),read32(0x1ea004),read32(0x1ea008),read32(0x1ea00c)];}
+function setRandState(val){if(val.length !== 4){throw "Must have 4 states!";}set32(0x1ea000,val[0]);set32(0x1ea004,val[1]);set32(0x1ea008,val[2]);set32(0x1ea00c,val[3]);}
+function readFsmRandWeights(fsmstate){readFullArr(read32(fsmstate+0x2c)).map(e=>({val:readFloat32(e+0x18),ptr:e+0x18}));}
+function noDeath(){
+[30247888,29188840,29220272,30703504,29163616,25388496].forEach(e=>set32(read32(e+0xC)+0x8,0));
+gameInstance.Module.dynCall_vii(7174,37783424);
+alert("No Death Activated! Reload to undo! (Score will be broken if not run on home screen!)");
+}
+function AddForce(fvec,mode){
+let vec3 = gameInstance.Module._malloc(12);
+setFloat32(vec3,fvec.x);setFloat32(vec3+4,fvec.y);setFloat32(vec3+8,fvec.z);
+gameInstance.Module.dynCall_viiiii(391,0,BallRb,vec3,mode);
+gameInstance.Module._free(vec3);
+}
+function SetVelocity(fvec){
+let vec3 = gameInstance.Module._malloc(12);
+setFloat32(vec3,fvec.x);setFloat32(vec3+4,fvec.y);setFloat32(vec3+8,fvec.z);
+gameInstance.Module.dynCall_viii(1919,BallRb,vec3);
+gameInstance.Module._free(vec3);
+}
+function addSpeedUp(){setFloat32(readFloat32(SteerForceRight)+100);
+setFloat32(readFloat32(SteerForceLeft)-100);
+setFloat32(readFloat32(yForce)-300);
+setFloat32(readFloat32(zForce)+30);}
+function instantiate(prefabptr,pos,rot){
+let posp = gameInstance.Module._malloc(12);
+setFloat32(posp,pos.x);//x
+setFloat32(posp+0x4,pos.y);//y
+setFloat32(posp+0x8,pos.z);//z
+let rotp = gameInstance.Module._malloc(16);
+setFloat32(rotp,rot.x);//x
+setFloat32(rotp+0x4,rot.y);//y
+setFloat32(rotp+0x8,rot.z);//z
+setFloat32(rotp+0xc,rot.w);//w
+return gameInstance.Module.dynCall_iiiiii(345,0,prefabptr,posp,rotp);
+}
+window.keys=[];
+document.addEventListener("keydown",e=>{if(keys.indexOf(e.keyCode)==-1){keys.push(e.keyCode);}});
+document.addEventListener("keyup",e=>{keys.splice(keys.indexOf(e.keyCode),1)});
+function addSpeedUp(){setFloat32(readFloat32(SteerForceRight)+100);
+setFloat32(readFloat32(SteerForceLeft)-100);
+setFloat32(readFloat32(yForce)-300);
+setFloat32(readFloat32(zForce)+30);}
+function readChar(ptr){
+    let i = 0;
+    let out = "";
+    while(read8(ptr+i)!=0){
+    out+=String.fromCharCode(read8(ptr+i));
+    i++;
+    if(i>100){return null;}
+    }
+    return out;
+}
+function readList(ptr){
+let list = [];
+let len = gameInstance.Module.dynCall_iii(4408,ptr);
+for(var i = 0;i<len;i++){
+list.push(gameInstance.Module.dynCall_iiii(2392,ptr,i));
+}
+return list;
+}
+function death(){gameInstance.Module.dynCall_viiii(1155,0,30726088);}
+function resetGame(){
+        gameInstance.Module['dynCall_viii'](2350, 29222080, 30725992); // deathcomplete
+        gameInstance.Module['dynCall_viii'](2350, 29222080, 30632936); // destropool
+        gameInstance.Module['dynCall_viii'](2350, 29222080, 30726232); // resetgame
+        gameInstance.Module['dynCall_viii'](2350, 29223600, 30726088); // collidedeath
+        gameInstance.Module['dynCall_viii'](2350, 29223600, 30725992); // deathcomplt
+        gameInstance.Module['dynCall_viii'](2350, 29223600, 30248008); // resetpressed
+        //coweggs put this together
+}
+function BroadcastEvent(eventName){
+let str = createString(eventName);
+gameInstance.Module.dynCall_viiii(1154,0,str);
+gameInstance.Module._free(str);
+}
+window.nowPatch = false;
+function writeChar(value){
+const ptr = gameInstance.Module._malloc(value.length+1);
+gameInstance.Module.writeAsciiToMemory(value,ptr);
+return ptr;
+}
+function createString(value){
+let ptr = gameInstance.Module._malloc(0xC+value.length*2);
+writeString(ptr,value);
+return ptr;
+}
+function free(ptr){gameInstance.Module._free(ptr);}
+function get_GameObject(name){
+let str = createString(name);
+let GameObject = gameInstance.Module.dynCall_iiii(1532,0,str);
+free(str);
+return GameObject;}
+function get_PlayMakerFSM(gameObject,fsmName="FSM"){
+let ptr = createString("FSM");
+let ret = gameInstance.Module.dynCall_iiiii(3376,0,gameObject,ptr);
+free(ptr);
+return ret;}
+function getGameObjectName(ptr){
+const out = gameInstance.Module.dynCall_iii(2477,ptr)
+return readString(out);
+}
+function readGameObject(ptr){
+    return {name:getGameObjectName(ptr),ptr};
+}
+function onPress(key,action){document.addEventListener("keydown",e=>{if(e.key==key){action();}});}
+function getPos(){
+let ptr = gameInstance.Module._malloc(12);
+gameInstance.Module.dynCall_viii(1927,41991744,ptr);
+let ret = {x:readFloat32(ptr),y:readFloat32(ptr+4),z:readFloat32(ptr+8)};
+gameInstance.Module._free(ptr);
+return ret;
+}
+function getFsms(){
+return readList(gameInstance.Module.dynCall_iii(3073));
+}
+function setPos(x,y,z){
+let ptr = gameInstance.Module._malloc(12);
+setFloat32(ptr,x);
+setFloat32(ptr+0x4,y);
+setFloat32(ptr+0x8,z);
+gameInstance.Module.dynCall_viii(1928,41991744,ptr);
+gameInstance.Module._free(ptr);
+}
+function getFsmGameObject(ptr){return gameInstance.Module.dynCall_iii(3114,ptr);}
+function readFsmTransitions(ptr){return {toState:readPStr(ptr+0xC),fsmEvent:readFsmEvent(read32(ptr+0x8)),ptr};}
+    function readFullArr(ptr){
+    let i = 0;
+    let arr = [];
+    while(readArr(ptr,i)!=0){
+    arr.push(readArr(ptr,i));
+    i++;
+    if(i>500){throw "Array is too large.";}
+    }
+    arr.ptr = ptr;
+    return arr;
+}
+function readFsmState(ptr){
+    return {name:readPStr(ptr+0x18),activeActionIndex:read32(ptr+0x10),activeAction:(read32(ptr+0xC)!==0)?readFsmStateAction(read32(ptr+0xC)):null,desc:readPStr(ptr+0x1C),active:read8(ptr+0x8),finished:read8(ptr+0x9),actions:readFullArr(read32(ptr+0x3C)).map(e=>readFsmStateAction(e)),transitions:readFullArr(read32(ptr+0x38)).map(e=>readFsmTransitions(e)),ptr};
+}
+function readNamedVariable(ptr){return {useVariable:read8(ptr+0x8),name:readPStr(ptr+0xC),tooltip:readPStr(ptr+0x10),showInInspector:read8(ptr+0x14),networkSync:read8(ptr+0x15),ptr};}
+function readFsmStateAction(ptr){
+    return {name:readPStr(ptr+0x8),type:readClassName(ptr),enabled:read8(ptr+0xC),isOpen:read8(ptr+0xD),active:read8(ptr+0xE),finished:read8(ptr+0xF),autoName:read8(ptr+0x10),ptr};
+}
+function readFsmVariables(ptr){return {floatVars:readFullArr(read32(ptr+0x8)).map(e=>readNamedVariable(e)),intVars:readFullArr(read32(ptr+0xC)).map(e=>readNamedVariable(e)),boolVars:readFullArr(read32(ptr+0x10)).map(e=>readNamedVariable(e)),stringVars:readFullArr(read32(ptr+0x14)).map(e=>readNamedVariable(e))};}
+function readFsmEvent(ptr){return {name:readPStr(ptr+0x8),isSystemEvent:read8(ptr+0xC),isGlobal:read8(ptr+0xD),ptr};}
+    function searchFor(str){let buffer = new Uint8Array(gameInstance.Module.wasmMemory.buffer);
+for(var i = 0;i<buffer.length;i+=2048){
+const buf = [...buffer.subarray(i,i+2048)].map(e=>String.fromCharCode(e)).join("");if(buf.includes(str)){console.log(i+buf.indexOf(str));}}}
+function read(loc,len){return [...new Uint8Array(gameInstance.Module.wasmMemory.buffer).subarray(loc,loc+len)].map(e=>String.fromCharCode(e)).join("");}
+function searchFor16(str){str=str.split("").map(e=>e+"\x00").join("");let buffer = new Uint8Array(gameInstance.Module.wasmMemory.buffer);
+for(var i = 0;i<55000000;i+=2048){
+const buf = [...buffer.subarray(i,i+2048)].map(e=>String.fromCharCode(e)).join("");if(buf.includes(str)){console.log(i+buf.indexOf(str)-12);}}}
+function searchFor16arr(str){let retarr=[];str=str.split("").map(e=>e+"\x00").join("");let buffer = new Uint8Array(gameInstance.Module.wasmMemory.buffer);
+for(var i = 0;i<55000000;i+=2048){
+const buf = [...buffer.subarray(i,i+2048)].map(e=>String.fromCharCode(e)).join("");if(buf.includes(str)){retarr.push(i+buf.indexOf(str)-12);}}return retarr;}
+function read(loc,len){return [...new Uint8Array(gameInstance.Module.wasmMemory.buffer).subarray(loc,loc+len)].map(e=>String.fromCharCode(e)).join("");}
+    function read32(loc){return new Uint32Array(gameInstance.Module.wasmMemory.buffer)[loc/4];}
+function read16(loc){return new Uint16Array(gameInstance.Module.wasmMemory.buffer)[loc/2];}
+function set16(loc,val){return new Uint16Array(gameInstance.Module.wasmMemory.buffer)[loc/2] = val;}
+function read8(loc){return new Uint8Array(gameInstance.Module.wasmMemory.buffer)[loc];}
+function set8(loc,val){new Uint8Array(gameInstance.Module.wasmMemory.buffer)[loc] = val;}
+function set32(loc,val){new Uint32Array(gameInstance.Module.wasmMemory.buffer)[loc/4] = val;}
+function setFloat32(loc,val){new Float32Array(gameInstance.Module.wasmMemory.buffer)[loc/4] = val;}
+function readFloat32(loc){return new Float32Array(gameInstance.Module.wasmMemory.buffer)[loc/4];}
+function readString(ptr){let str = "";const len = read32(ptr+0x8);if(len<0 || len>1e3){console.log("Not a string!");return;}for(var i = 0;i<len*2;i+=2){str+=String.fromCharCode(read16(ptr+0xC+i));}return str;}
+function writeString(ptr,str){set32(ptr+0x8,str.length);for(let i = 0;i<str.length*2;i+=2){set16(ptr+0xC+i,str.charCodeAt(i/2))}}
+function readVec3(ptr){return {x:readFloat32(ptr),y:readFloat32(ptr+0x4),z:readFloat32(ptr+0x8)};}
+function setVec3(ptr,vec){if(vec.x==undefined||vec.y==undefined||vec.z==undefined){throw "Vector3 must have an x, y, and z!";}}
+function readQuat(ptr){return {x:readFloat32(ptr),y:readFloat32(ptr+0x4),z:readFloat32(ptr+0x8),w:readFloat32(ptr+0xC)};}
+function setQuat(ptr,vec){if(vec.x==undefined||vec.y==undefined||vec.z==undefined||vec.w==undefined){throw "Quaternion must have an x, y, z, and w!";}setFloat32(ptr,vec.x);setFloat32(ptr+0x4,vec.y);setFloat32(ptr+0x8,vec.z);setFloat32(ptr+0xC,vec.w);}
+function readArr(ptr,ind){return read32(ptr+0x10+(ind*4));}
+function setArr(ptr,ind,value){return set32(ptr+0x10+(ind*4),value);}
+function readPStr(ptr){return readString(read32(ptr));}
+function searchForVar(name){
+var strs = searchFor16arr(name);
+var possiblities = strs.map(e=>{const ptrs = searchForInt32(e);if(ptrs.length>1){throw "more than 1 pointer found!";}return ptrs[0]-0xC;});
+return possiblities.filter(e=>{
+if(read8(e+0x8)>1){return;}
+if(read8(e+0x14)>1){return;}
+if(read8(e+0x15)>1){return;}
+return !0;}).map(e=>e+0x18);
+}
+function searchForFloat(val){
+const arr = new Float32Array(gameInstance.Module.wasmMemory.buffer);
+let addrs = [];
+for(var i = 0;i<arr.length;i++){
+    if(arr[i]==val){addrs.push(i*4);}
+}
+return addrs;
+}
+function searchForInt32(val){
+const arr = new Uint32Array(gameInstance.Module.wasmMemory.buffer);
+let addrs = [];
+for(var i = 0;i<arr.length;i++){
+    if(arr[i]==val){addrs.push(i*4);}
+}
+return addrs;
+}
+function speedUp(){gameInstance.Module.dynCall_viiii(1155,fsms[6],30725968);}
+    function progFunc(gameInstance,progress){if(progress == 1){enableHacks();alert("Hacks Loaded! \nKeybinds: \n2: adds 2 to your score\n3: sets your score to 2147483620 (if it goes over 2147483647 it'll reset to negative)\n5: doubles your score\nj: decreases your score by 1\nk: increases your score by 1\nArrow Up/ Down: increases and decreases forward speed (hold for more effect)\nW / S: increases and decreases gravity (hold for more effect)\nN: no death\nY:speed up\nC:collide/die");window.addEventListener("resize",e=>{gameInstance.Module.setCanvasSize(window.innerWidth,window.innerHeight)});}UnityProgress(gameInstance,progress);}
+    var zForce = 0x01cd5c98;
+var yForce = 0x01cd5cb8;
+var maxRepeats = 30562168;//int32
+var SteerForceRight = 0x01d46af8;
+var SteerForceLeft = 0x01d46b18;
+var BlockLength = 30562360;
+var GameObjectBall = 32936032;
+var FsmOwnerBall = 29249256;//FsmOwnerDefault
+var BallRb = 41991744;//Rigidbody
+var sceneHandle = 4294967234;
+var SphereGameObject = 25273360;
+var ScoreGUIText = 34322048;//GUIText
+var PlayMakerFSMType = 25281808;//MonoType
+var TransformType = 33380392;//MonoType
+var SpawnPoolsDict = 42162888;//SpawnPoolDict
+var SpawnPool = 25323200;//SpawnPool
+var RigidbodyType = 42161928;//MonoType
+//derived from AddForce at 32002752
+window.running = !0;
+var mag = 25;
+    var gameInstance = UnityLoader.instantiate("gameContainer", "Build/slope.json", {onProgress: progFunc, Module: {onRuntimeInitialized: function () {UnityProgress(gameInstance, "complete")}}});
+    /*var pass = "iamsmart", pass2 = "opensesame", ind = 0, ind2 = 0, hacks = false;
+    document.addEventListener("keydown", function (e) {if (e.key === pass[ind]) {ind++;} else {ind = 0;} if (e.key === pass2[ind2]) {ind2++;} else {ind2 = 0;} if (ind === pass.length || ind2 === pass2.length) {if (!hacks) {alert("Hacks Enabled"); enableHacks(); hacks = true;} } });*/
+    function enableHacks() {kp=false;var view = new Uint32Array(gameInstance.Module.wasmMemory.buffer); document.addEventListener("keydown", function (e) {if(e.key==="i"){kp=true;view[7674510]=0;}if(e.key==="Enter" && kp){kp=false;}if(kp){if(parseInt(e.key)!=NaN){
+view[7674510] = parseInt(view[7674510].toString()+e.key);}}if(!kp){switch (e.key) {case "ArrowUp":setFloat32(zForce,readFloat32(zForce)+mag);break;case "ArrowDown":setFloat32(zForce,readFloat32(zForce)-mag);break;case "w":setFloat32(yForce,readFloat32(yForce)+mag);break;case "s":setFloat32(yForce,readFloat32(yForce)-mag);break;case "5": view[7674510]*=2;break;case "n":noDeath();break;case "c":death();break;case ";":hacks=false;break;case "r":resetGame();break;case "y":speedUp();break;case "j": view[7674510]--; break; case "k": view[7674510]++; break; case "2": view[7674510] += 2; break; case "3": view[7674510] = 2147483620; break; case "0": view[7674510] = 0; break}}})}
+
+/*
+gameInstance.Module.dynCall_v = function(a){if(a==80){
+    setFloat32(yForce,0);
+setFloat32(zForce,0);
+    if(keys.includes(38)){AddForce({x:0,y:-480,z:480},0);}
+    if(keys.includes(40)){AddForce({x:0,y:480,z:-480},0);}
+if(keys.includes(83)){AddForce({x:0,y:-480,z:0},0);}
+if(keys.includes(87)){AddForce({x:0,y:480,z:0},0);}} return gameInstance.Module.asm.dynCall_v.apply(null,arguments);}
+*/
+  </script>
+</head>
+
+<body style="margin: 0; overflow: hidden;">
+  <div class="webgl-content">
+    <div id="gameContainer" style="width: 100%; height: 100%; margin: 0;"></div>
+  </div>
+</body>
